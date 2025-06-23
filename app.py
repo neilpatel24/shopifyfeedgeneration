@@ -234,6 +234,15 @@ def plot_product_distribution(products):
         return fig
     return None
 
+def get_excel_file_path():
+    """Get the path to the Excel file, using sample file as fallback for deployment"""
+    if os.path.exists('MASTER COPY.xlsx'):
+        return 'MASTER COPY.xlsx'
+    elif os.path.exists('SAMPLE_MASTER_COPY.xlsx'):
+        return 'SAMPLE_MASTER_COPY.xlsx'
+    else:
+        return None
+
 def create_manual_shopify_feed(manual_rows_data):
     """Create a Shopify feed from manually entered product data using the same logic as file upload"""
     
@@ -260,8 +269,9 @@ def create_manual_shopify_feed(manual_rows_data):
             
             # Create Sample sheet (copy from existing file if available)
             try:
-                if os.path.exists('MASTER COPY.xlsx'):
-                    sample_df = pd.read_excel('MASTER COPY.xlsx', sheet_name='Sample')
+                excel_file = get_excel_file_path()
+                if excel_file:
+                    sample_df = pd.read_excel(excel_file, sheet_name='Sample')
                     sample_df.to_excel(writer, sheet_name='Sample', index=False)
                 else:
                     # Create a minimal sample sheet
@@ -276,8 +286,9 @@ def create_manual_shopify_feed(manual_rows_data):
             
             # Create Finishes sheet (copy from existing file if available)
             try:
-                if os.path.exists('MASTER COPY.xlsx'):
-                    finishes_df = pd.read_excel('MASTER COPY.xlsx', sheet_name='Finishes')
+                excel_file = get_excel_file_path()
+                if excel_file:
+                    finishes_df = pd.read_excel(excel_file, sheet_name='Finishes')
                     finishes_df.to_excel(writer, sheet_name='Finishes', index=False)
                 else:
                     # Create a minimal finishes sheet

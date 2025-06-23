@@ -37,6 +37,9 @@ Thumbs.db
 *.xls
 *.csv
 
+# Exception: Include sample data for Streamlit deployment
+!SAMPLE_MASTER_COPY.xlsx
+
 # Temporary files
 temp_*
 *_temp.*
