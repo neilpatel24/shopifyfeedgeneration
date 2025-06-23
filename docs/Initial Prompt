@@ -1,0 +1,14 @@
+
+I need help creating a Shopify product feed from an excel tab that gets populated from the team with new products to be added.
+Everything we’ll need is in the MASTER COPY.xlsx file. 
+The ‘MASTER COPY’ tab is the tab where the new products get added.
+The way it works is that a new product gets added, with different sizes and different finishes. So for each new product, we need to ensure a row is added to the feed for each size and each finish. 
+So if a new product is added with 2 sizes and 8 finishes, it will have 2 rows in the ‘MASTER COPY’ tab, but will need to be represented as 16 new rows in the shopify feed to ensure each variant is included.
+An example can be found in rows 14786 and 14787, where the output would look like the product feed in the ‘Sample’ tab. 
+I have also included detailed instructions on how to ensure all the columns in the shopify feed are correctly added in the ‘Mapping’ tab.
+Can you build a script that will do this exercise for me. Do not try to run the script on the entire MASTER COPY tab at any point. If you ever need to to a test run try it on the products found in rows 14786 and 14787.
+
+## - special finish type
+- PN, SN, BZ, AB, SB, DB, BAB, BZW, BABW, ABW, DBW, NBW, SBW, PBUL
+X##
+- PCOP, SCOP, BLN, PEW, MBL, ASV, RGP, ACOP 

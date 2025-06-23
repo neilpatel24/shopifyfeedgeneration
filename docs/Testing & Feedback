@@ -1,0 +1,17 @@
+Testing & Feedback
+Iteration 1:
+- Column headers all in place
+- for the two rows from MASTER COPY, i expected 16 rows to be generated since there are 8 finishes (shown by the number 8 in column i in the top row) and 2 sizes (two rows) - fix this for iteration 2
+
+Iteration 2 (all fixed):
+- Published Column must read "TRUE", not "1" - same for other columns that should be TRUE are coming out as 1
+- Price is not being set correctly, it set the same price for all rows, but the price should relate to the size and the finish
+
+Iteration 3:
+- trying it with bigger sample set of products (14770-14774, 5 product codes, 25 finishes)
+- wasn't using the right row references so wasn't creating the right number of rows, now fixed
+- now finds the right SKU and prices for each row
+
+Iteraction 4:
+- change variant inventory policy to "deny"
+- new row based on new sizes only 
