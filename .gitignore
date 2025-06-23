@@ -37,6 +37,10 @@ Thumbs.db
 *.xls
 *.csv
 
+# CRITICAL: Never commit the actual MASTER COPY file (contains client data)
+MASTER COPY.xlsx
+"MASTER COPY.xlsx"
+
 # Exception: Include sample data for Streamlit deployment
 !SAMPLE_MASTER_COPY.xlsx
 
