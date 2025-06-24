@@ -78,7 +78,7 @@ The web interface provides two methods for generating Shopify feeds:
 - **Two input methods**: File upload or manual data entry
 - Generates Shopify product feed from MASTER COPY Excel file
 - **Manual product creation**: Enter product data through web forms
-- **Finish selection**: Choose from 23 available finishes including:
+- **Finish selection**: Choose from 25 available finishes including:
   - Factory Finished Satin Brass (FFSB)
   - Factory Finished Polished Nickel (FFPN)
   - Factory Finished Matt Bronze (FFMB)
