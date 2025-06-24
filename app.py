@@ -18,7 +18,7 @@ plt.style.use('ggplot')
 COLORS = ["#1E88E5", "#FFC107", "#26A69A", "#D81B60", "#8E24AA", "#E53935", "#43A047"]
 
 st.set_page_config(
-    page_title="A&H Brass Shopify Feed Generator",
+    page_title="Shopify Feed Generator",
     page_icon="🛒",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -319,7 +319,7 @@ def create_manual_shopify_feed(manual_rows_data):
             os.unlink(tmp_file.name)
 
 def main():
-    st.title("A&H Brass Shopify Feed Generator")
+    st.title("Shopify Feed Generator")
     st.write(f"Version {__version__}")
     
     # Create tabs
@@ -342,7 +342,7 @@ def main():
             
             st.header("About")
             st.markdown("""
-            This tool converts A&H Brass product data from Excel to Shopify-compatible format.
+            This tool converts product data from Excel to Shopify-compatible format.
             
             Features:
             - Multi-product detection
