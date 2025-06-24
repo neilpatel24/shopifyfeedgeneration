@@ -1,5 +1,14 @@
 # Changelog for shopify_feed_generator.py
 
+## Version 1.8.0 - 2025-06-24 (Generalization and Compatibility Updates)
+
+### Improvements:
+- Removed A&H Brass specific references from app.py to make the tool more generic
+- Updated README.md to reflect 25 available finishes (increased from 23)
+- Fixed Python 3.13 compatibility issues
+- Added security improvements: Explicitly exclude MASTER COPY.xlsx from repository
+- Prepared for Streamlit Cloud deployment
+
 ## Version 1.7.1 - 2023-06-05 (Streamlit App Enhancements)
 
 ### Improvements:

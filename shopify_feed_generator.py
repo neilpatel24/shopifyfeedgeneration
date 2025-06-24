@@ -7,9 +7,9 @@ import warnings
 import openpyxl
 
 # Version information
-__version__ = "1.7.1"
-__date__ = "2023-06-05"
-__description__ = "Shopify Product Feed Generator for A&H Brass"
+__version__ = "1.8.0"
+__date__ = "2025-06-24"
+__description__ = "Shopify Product Feed Generator"
 
 # Suppress the FutureWarning about DataFrame concatenation
 warnings.simplefilter(action='ignore', category=FutureWarning)
