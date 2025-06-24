@@ -1,6 +1,6 @@
-# A&H Brass Shopify Product Feed Generator
+# Shopify Product Feed Generator
 
-A Python tool that generates Shopify product feed data from A&H Brass Excel file, with both file upload and manual input options. Now includes automatic tracking of products with unidentified finishes for retrospective fixing.
+A Python tool that generates Shopify product feed data from an Excel file, with both file upload and manual input options. Now includes automatic tracking of products with unidentified finishes for retrospective fixing.
 
 ## Directory Structure
 
