@@ -7,7 +7,7 @@ import warnings
 import openpyxl
 
 # Version information
-__version__ = "1.8.4"
+__version__ = "1.8.5"
 __date__ = "2025-06-24"
 __description__ = "Shopify Product Feed Generator"
 

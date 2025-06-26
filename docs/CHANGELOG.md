@@ -1,5 +1,12 @@
 # Changelog for shopify_feed_generator.py
 
+## Version 1.8.5 - 2025-06-24 (Streamlit Display Fix)
+
+### Fixes:
+- Fixed issue where products that couldn't be processed weren't being displayed in the Streamlit UI
+- Corrected indentation in app.py to ensure error reports are always visible
+- Products with missing data are now properly displayed and can be downloaded as CSV
+
 ## Version 1.8.4 - 2025-06-24 (Error Tracking Improvements)
 
 ### Improvements:

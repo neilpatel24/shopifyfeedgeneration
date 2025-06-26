@@ -434,26 +434,25 @@ def main():
                                                 file_name="finishes_not_found.csv",
                                                 mime="text/csv"
                                             )
-                                        
-                                        # Show products not processed warning if any
-                                        if products_not_processed:
-                                            st.warning(f"⚠️ Found {len(products_not_processed)} products that couldn't be processed")
-                                            
-                                            with st.expander("🔍 View Products That Couldn't Be Processed", expanded=False):
-                                                not_processed_df = pd.DataFrame(products_not_processed)
-                                                st.dataframe(not_processed_df, use_container_width=True)
-                                                
-                                                # Offer download of the CSV
-                                                csv = not_processed_df.to_csv(index=False).encode('utf-8')
-                                                st.download_button(
-                                                    label="Download Products Not Processed Report",
-                                                    data=csv,
-                                                    file_name="products_not_processed.csv",
-                                                    mime="text/csv"
-                                                )
                                     else:
                                         st.info("✅ All products had identifiable finishes")
                                     
+                                    # Show products not processed warning if any - moved outside the finishes_not_found condition
+                                    if products_not_processed:
+                                        st.warning(f"⚠️ Found {len(products_not_processed)} products that couldn't be processed")
+                                        
+                                        with st.expander("🔍 View Products That Couldn't Be Processed", expanded=False):
+                                            not_processed_df = pd.DataFrame(products_not_processed)
+                                            st.dataframe(not_processed_df, use_container_width=True)
+                                            
+                                            # Offer download of the CSV
+                                            csv = not_processed_df.to_csv(index=False).encode('utf-8')
+                                            st.download_button(
+                                                label="Download Products Not Processed Report",
+                                                data=csv,
+                                                file_name="products_not_processed.csv",
+                                                mime="text/csv"
+                                            )
                                     # Count unique products and variants
                                     unique_handles = feed_df['Handle'].unique()
                                     
@@ -652,26 +651,25 @@ def main():
                                         file_name="finishes_not_found.csv",
                                         mime="text/csv"
                                     )
-                                
-                                # Show products not processed warning if any
-                                if products_not_processed:
-                                    st.warning(f"⚠️ Found {len(products_not_processed)} products that couldn't be processed")
-                                    
-                                    with st.expander("🔍 View Products That Couldn't Be Processed", expanded=False):
-                                        not_processed_df = pd.DataFrame(products_not_processed)
-                                        st.dataframe(not_processed_df, use_container_width=True)
-                                        
-                                        # Offer download of the CSV
-                                        csv = not_processed_df.to_csv(index=False).encode('utf-8')
-                                        st.download_button(
-                                            label="Download Products Not Processed Report",
-                                            data=csv,
-                                            file_name="products_not_processed.csv",
-                                            mime="text/csv"
-                                        )
                             else:
                                 st.info("✅ All products had identifiable finishes")
                             
+                            # Show products not processed warning if any - moved outside the finishes_not_found condition
+                            if products_not_processed:
+                                st.warning(f"⚠️ Found {len(products_not_processed)} products that couldn't be processed")
+                                
+                                with st.expander("🔍 View Products That Couldn't Be Processed", expanded=False):
+                                    not_processed_df = pd.DataFrame(products_not_processed)
+                                    st.dataframe(not_processed_df, use_container_width=True)
+                                    
+                                    # Offer download of the CSV
+                                    csv = not_processed_df.to_csv(index=False).encode('utf-8')
+                                    st.download_button(
+                                        label="Download Products Not Processed Report",
+                                        data=csv,
+                                        file_name="products_not_processed.csv",
+                                        mime="text/csv"
+                                    )
                             # Count products and variants
                             unique_handles = feed_df['Handle'].unique()
                             
