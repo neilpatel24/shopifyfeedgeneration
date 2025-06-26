@@ -1,5 +1,13 @@
 # Changelog for shopify_feed_generator.py
 
+## Version 1.8.4 - 2025-06-24 (Error Tracking Improvements)
+
+### Improvements:
+- Added tracking for products that couldn't be processed due to missing data
+- Products with missing size/SKU/price data are now logged to products_not_processed.csv
+- Added display and download options for these errors in the Streamlit app
+- This helps identify products that were skipped during feed generation
+
 ## Version 1.8.3 - 2025-06-24 (X## Finish Code Fix)
 
 ### Fixes:

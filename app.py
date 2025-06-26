@@ -312,8 +312,8 @@ def create_manual_shopify_feed(manual_rows_data):
         CONFIG["test_end_row"] = len(manual_df)  # End at last row of our manual data
         
         try:
-            feed_df, finishes_not_found = generate_shopify_feed(tmp_file.name, test_mode=True)
-            return feed_df, finishes_not_found
+            feed_df, finishes_not_found, products_not_processed = generate_shopify_feed(tmp_file.name, test_mode=True)
+            return feed_df, finishes_not_found, products_not_processed
         finally:
             # Clean up the temporary file
             os.unlink(tmp_file.name)
@@ -413,27 +413,44 @@ def main():
                             
                             try:
                                 # Run the generator
-                                feed_df, finishes_not_found = generate_shopify_feed(tmp_file_path, output_file, test_mode=True)
+                                feed_df, finishes_not_found, products_not_processed = generate_shopify_feed(tmp_file_path, output_file, test_mode=True)
                                 
                                 if not feed_df.empty:
                                     st.success(f"✅ Successfully generated Shopify feed with {len(feed_df)} rows!")
                                     
                                     # Show finishes not found warning if any
                                     if finishes_not_found:
-                                        st.warning(f"⚠️ {len(finishes_not_found)} products had unidentified finishes and defaulted to using all 25 finishes")
+                                        st.warning(f"⚠️ Found {len(finishes_not_found)} products with unidentified finishes")
                                         
                                         with st.expander("🔍 View Products with Unidentified Finishes", expanded=False):
                                             finishes_df = pd.DataFrame(finishes_not_found)
                                             st.dataframe(finishes_df, use_container_width=True)
                                             
-                                            # Provide download link for the CSV
-                                            csv = finishes_df.to_csv(index=False)
+                                            # Offer download of the CSV
+                                            csv = finishes_df.to_csv(index=False).encode('utf-8')
                                             st.download_button(
-                                                label="📥 Download Finishes Report (CSV)",
+                                                label="Download Finishes Not Found Report",
                                                 data=csv,
                                                 file_name="finishes_not_found.csv",
                                                 mime="text/csv"
                                             )
+                                        
+                                        # Show products not processed warning if any
+                                        if products_not_processed:
+                                            st.warning(f"⚠️ Found {len(products_not_processed)} products that couldn't be processed")
+                                            
+                                            with st.expander("🔍 View Products That Couldn't Be Processed", expanded=False):
+                                                not_processed_df = pd.DataFrame(products_not_processed)
+                                                st.dataframe(not_processed_df, use_container_width=True)
+                                                
+                                                # Offer download of the CSV
+                                                csv = not_processed_df.to_csv(index=False).encode('utf-8')
+                                                st.download_button(
+                                                    label="Download Products Not Processed Report",
+                                                    data=csv,
+                                                    file_name="products_not_processed.csv",
+                                                    mime="text/csv"
+                                                )
                                     else:
                                         st.info("✅ All products had identifiable finishes")
                                     
@@ -614,27 +631,44 @@ def main():
             else:
                 try:
                     with st.spinner("Generating Shopify feed using the same logic as file upload..."):
-                        feed_df, finishes_not_found = create_manual_shopify_feed(valid_rows)
+                        feed_df, finishes_not_found, products_not_processed = create_manual_shopify_feed(valid_rows)
                         
                         if not feed_df.empty:
                             st.success(f"✅ Successfully generated Shopify feed with {len(feed_df)} variants!")
                             
                             # Show finishes not found warning if any
                             if finishes_not_found:
-                                st.warning(f"⚠️ {len(finishes_not_found)} products had unidentified finishes and defaulted to using all 25 finishes")
+                                st.warning(f"⚠️ Found {len(finishes_not_found)} products with unidentified finishes")
                                 
                                 with st.expander("🔍 View Products with Unidentified Finishes", expanded=False):
                                     finishes_df = pd.DataFrame(finishes_not_found)
                                     st.dataframe(finishes_df, use_container_width=True)
                                     
-                                    # Provide download link for the CSV
-                                    csv = finishes_df.to_csv(index=False)
+                                    # Offer download of the CSV
+                                    csv = finishes_df.to_csv(index=False).encode('utf-8')
                                     st.download_button(
-                                        label="📥 Download Finishes Report (CSV)",
+                                        label="Download Finishes Not Found Report",
                                         data=csv,
                                         file_name="finishes_not_found.csv",
                                         mime="text/csv"
                                     )
+                                
+                                # Show products not processed warning if any
+                                if products_not_processed:
+                                    st.warning(f"⚠️ Found {len(products_not_processed)} products that couldn't be processed")
+                                    
+                                    with st.expander("🔍 View Products That Couldn't Be Processed", expanded=False):
+                                        not_processed_df = pd.DataFrame(products_not_processed)
+                                        st.dataframe(not_processed_df, use_container_width=True)
+                                        
+                                        # Offer download of the CSV
+                                        csv = not_processed_df.to_csv(index=False).encode('utf-8')
+                                        st.download_button(
+                                            label="Download Products Not Processed Report",
+                                            data=csv,
+                                            file_name="products_not_processed.csv",
+                                            mime="text/csv"
+                                        )
                             else:
                                 st.info("✅ All products had identifiable finishes")
                             

@@ -7,7 +7,7 @@ import warnings
 import openpyxl
 
 # Version information
-__version__ = "1.8.3"
+__version__ = "1.8.4"
 __date__ = "2025-06-24"
 __description__ = "Shopify Product Feed Generator"
 
@@ -164,6 +164,9 @@ def generate_shopify_feed(excel_file, output_file=None, test_mode=False):
     
     # Track products where finishes couldn't be identified
     finishes_not_found = []
+    
+    # Track products that couldn't be processed due to missing data
+    products_not_processed = []
     
     # Create a mapping of finish codes to full names
     finish_code_to_name = {}
@@ -342,6 +345,12 @@ def generate_shopify_feed(excel_file, output_file=None, test_mode=False):
             
             if not row_data:
                 print(f"Error: No valid size/SKU/price data found in rows for product: {product_description}")
+                # Track this product as not processed
+                products_not_processed.append({
+                    "Product Description": product_description,
+                    "Reason": "Missing size/SKU/price data",
+                    "Row Range": f"Rows {product_group_rows[0].name}-{product_group_rows[-1].name}" if len(product_group_rows) > 0 else "Unknown"
+                })
                 continue
             
             print(f"Found {len(row_data)} rows with valid data")
@@ -818,7 +827,15 @@ def generate_shopify_feed(excel_file, output_file=None, test_mode=False):
     else:
         print("✅ All products had identifiable finishes")
     
-    return shopify_feed, finishes_not_found
+    # Export products not processed to CSV if there are any
+    if products_not_processed:
+        products_not_processed_df = pd.DataFrame(products_not_processed)
+        csv_filename = "products_not_processed.csv"
+        products_not_processed_df.to_csv(csv_filename, index=False)
+        print(f"⚠️  Found {len(products_not_processed)} products that couldn't be processed")
+        print(f"📄 Details exported to {csv_filename}")
+    
+    return shopify_feed, finishes_not_found, products_not_processed
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Generate Shopify product feed from MASTER COPY Excel file')
@@ -925,7 +942,7 @@ if __name__ == "__main__":
             print(f"Error processing custom rows: {e}")
             exit(1)
     
-    feed, finishes_not_found = generate_shopify_feed(args.input, args.output, args.test)
+    feed, finishes_not_found, products_not_processed = generate_shopify_feed(args.input, args.output, args.test)
     print(f"Generated {len(feed)} rows in the Shopify feed")
     
     # Print sample of the feed
