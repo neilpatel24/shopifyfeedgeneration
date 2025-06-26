@@ -1,5 +1,15 @@
 # Changelog for shopify_feed_generator.py
 
+## Version 1.8.2 - 2025-06-24 (SKU Mapping Fix)
+
+### Fixes:
+- Fixed critical issue where all finishes of the same product and size were assigned the same SKU
+- Now correctly maps each finish to its specific SKU from the MASTER COPY:
+  - Specific finishes (CP, SCP, PB, etc.) get their exact SKU from matching rows
+  - Standard finishes (##) get the SKU from the row with ## finish code
+  - Premium finishes (x##) get the SKU from the row with x## finish code
+- Ensures accurate product codes in the generated Shopify feed
+
 ## Version 1.8.1 - 2025-06-24 (Image Alt Text Update)
 
 ### Improvements:

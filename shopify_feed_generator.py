@@ -7,7 +7,7 @@ import warnings
 import openpyxl
 
 # Version information
-__version__ = "1.8.1"
+__version__ = "1.8.2"
 __date__ = "2025-06-24"
 __description__ = "Shopify Product Feed Generator"
 
@@ -367,12 +367,46 @@ def generate_shopify_feed(excel_file, output_file=None, test_mode=False):
             for size in unique_sizes:
                 # For each finish, create a row in the Shopify feed
                 for finish in unique_finishes:
-                    # Find which row's SKU applies to this finish
+                    # Find which row's SKU applies to this specific finish
                     matching_row = None
+                    
+                    # First try to find an exact match for this specific finish
                     for idx, data in row_data.items():
-                        if data["size"] == size and finish in data["applicable_finishes"]:
-                            matching_row = (idx, data)
-                            break
+                        if data["size"] == size:
+                            # Check if this is a specific finish code (not ## or x##)
+                            if data["finish_code"] in finish_code_to_name and finish == finish_code_to_name[data["finish_code"]]:
+                                matching_row = (idx, data)
+                                break
+                    
+                    # If no exact match found, check for ## and x## categories
+                    if matching_row is None:
+                        # Check if this finish is in the hash_codes (##) list
+                        finish_code = None
+                        for code in hash_codes:
+                            if code in finish_code_to_name and finish == finish_code_to_name[code]:
+                                finish_code = "##"
+                                break
+                        
+                        # If not in hash_codes, check if it's in xhash_codes (x##)
+                        if finish_code is None:
+                            for code in xhash_codes:
+                                if code in finish_code_to_name and finish == finish_code_to_name[code]:
+                                    finish_code = "x##"
+                                    break
+                        
+                        # Now find the row with this finish_code
+                        if finish_code:
+                            for idx, data in row_data.items():
+                                if data["size"] == size and data["finish_code"] == finish_code:
+                                    matching_row = (idx, data)
+                                    break
+                    
+                    # If still no match, fall back to the original method as a last resort
+                    if matching_row is None:
+                        for idx, data in row_data.items():
+                            if data["size"] == size and finish in data["applicable_finishes"]:
+                                matching_row = (idx, data)
+                                break
                     
                     # If no row applies to this finish, skip it
                     if matching_row is None:
@@ -610,18 +644,52 @@ def generate_shopify_feed(excel_file, output_file=None, test_mode=False):
             for size in unique_sizes:
                 # For each finish, create a row in the Shopify feed
                 for finish in unique_finishes:
-                    # Find which row's SKU applies to this finish
+                    # Find which row's SKU applies to this specific finish
                     matching_row = None
-                    for i, data in row_data.items():
-                        if data["size"] == size and finish in data["applicable_finishes"]:
-                            matching_row = (i, data)
-                            break
+                    
+                    # First try to find an exact match for this specific finish
+                    for idx, data in row_data.items():
+                        if data["size"] == size:
+                            # Check if this is a specific finish code (not ## or x##)
+                            if data["finish_code"] in finish_code_to_name and finish == finish_code_to_name[data["finish_code"]]:
+                                matching_row = (idx, data)
+                                break
+                    
+                    # If no exact match found, check for ## and x## categories
+                    if matching_row is None:
+                        # Check if this finish is in the hash_codes (##) list
+                        finish_code = None
+                        for code in hash_codes:
+                            if code in finish_code_to_name and finish == finish_code_to_name[code]:
+                                finish_code = "##"
+                                break
+                        
+                        # If not in hash_codes, check if it's in xhash_codes (x##)
+                        if finish_code is None:
+                            for code in xhash_codes:
+                                if code in finish_code_to_name and finish == finish_code_to_name[code]:
+                                    finish_code = "x##"
+                                    break
+                        
+                        # Now find the row with this finish_code
+                        if finish_code:
+                            for idx, data in row_data.items():
+                                if data["size"] == size and data["finish_code"] == finish_code:
+                                    matching_row = (idx, data)
+                                    break
+                    
+                    # If still no match, fall back to the original method as a last resort
+                    if matching_row is None:
+                        for idx, data in row_data.items():
+                            if data["size"] == size and finish in data["applicable_finishes"]:
+                                matching_row = (idx, data)
+                                break
                     
                     # If no row applies to this finish, skip it
                     if matching_row is None:
                         continue
                     
-                    i, data = matching_row
+                    idx, data = matching_row
                     sku_base = data["sku"]
                     price = data["price"]
                     
