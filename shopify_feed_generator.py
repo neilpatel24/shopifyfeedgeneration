@@ -7,7 +7,7 @@ import warnings
 import openpyxl
 
 # Version information
-__version__ = "1.8.2"
+__version__ = "1.8.3"
 __date__ = "2025-06-24"
 __description__ = "Shopify Product Feed Generator"
 
@@ -391,7 +391,7 @@ def generate_shopify_feed(excel_file, output_file=None, test_mode=False):
                         if finish_code is None:
                             for code in xhash_codes:
                                 if code in finish_code_to_name and finish == finish_code_to_name[code]:
-                                    finish_code = "x##"
+                                    finish_code = "X##"
                                     break
                         
                         # Now find the row with this finish_code
@@ -668,7 +668,7 @@ def generate_shopify_feed(excel_file, output_file=None, test_mode=False):
                         if finish_code is None:
                             for code in xhash_codes:
                                 if code in finish_code_to_name and finish == finish_code_to_name[code]:
-                                    finish_code = "x##"
+                                    finish_code = "X##"
                                     break
                         
                         # Now find the row with this finish_code

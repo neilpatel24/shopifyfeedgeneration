@@ -1,5 +1,12 @@
 # Changelog for shopify_feed_generator.py
 
+## Version 1.8.3 - 2025-06-24 (X## Finish Code Fix)
+
+### Fixes:
+- Fixed case sensitivity issue with X## finish codes
+- Premium finishes (X##) now correctly get the SKU from the row with X## finish code
+- Ensures all finishes (CP, SCP, PB, ##, and X##) are mapped to their proper SKUs
+
 ## Version 1.8.2 - 2025-06-24 (SKU Mapping Fix)
 
 ### Fixes:
