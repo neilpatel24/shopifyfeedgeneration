@@ -143,18 +143,21 @@ This generates 16 variants (2 sizes × 8 finishes) using the same logic as the f
 
 ## Latest Version
 
-Version 1.7.1 includes:
-- **Finishes tracking and reporting** for products with unidentified finishes
-- **Enhanced column F logic** for better finish selection before defaulting
-- **CSV export functionality** for retrospective fixing (`finishes_not_found.csv`)
-- **Improved Streamlit UI** with finish status indicators and downloadable reports
-- **New manual input functionality** with comprehensive form interface
-- **Dual-tab design** - file upload and manual input in separate tabs
-- **23 predefined finishes** with proper naming conventions
-- **Dynamic size management** - add/remove sizes as needed
-- **Form validation** to ensure required fields are completed
-- Multiple product support (correctly separates different products in a row range)
-- Finish prioritization based on product name and finish count
-- Accurate Excel row detection using openpyxl
+Version 1.8.5 includes:
+- **Correct SKU mapping for product finishes**: Each finish (CP, SCP, PB, ##, X##) is now correctly mapped to its specific SKU from the MASTER COPY
+- **Fixed case sensitivity issue** with X## vs x## finish codes
+- **Error tracking and reporting** for products that couldn't be processed due to missing data
+- **Products with missing data** are now logged to products_not_processed.csv
+- **Improved Streamlit UI** with proper display of error reports and downloadable CSV
+- **Image Alt Text optimization** for better SEO and accessibility
+- **Generalization improvements** with removal of company-specific references
+- All previous features from 1.7.1:
+  - Finishes tracking and reporting for unidentified finishes
+  - Enhanced column F logic for better finish selection
+  - CSV export functionality for retrospective fixing
+  - 25 predefined finishes with proper naming conventions
+  - Multiple product support with correct separation
+  - Finish prioritization based on product name and finish count
+  - Accurate Excel row detection using openpyxl
 
 For complete version history, see the [CHANGELOG.md](docs/CHANGELOG.md) file. 
