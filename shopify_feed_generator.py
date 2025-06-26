@@ -7,7 +7,7 @@ import warnings
 import openpyxl
 
 # Version information
-__version__ = "1.8.0"
+__version__ = "1.8.1"
 __date__ = "2025-06-24"
 __description__ = "Shopify Product Feed Generator"
 
@@ -393,6 +393,8 @@ def generate_shopify_feed(excel_file, output_file=None, test_mode=False):
                     
                     if is_first_row:
                         new_row['Title'] = product_description
+                        # Set Image Alt Text to match the Title
+                        new_row['Image Alt Text'] = product_description
                         new_row['Vendor'] = "vendor-unknown"
                         new_row['Product Category'] = "Uncategorized"
                         new_row['Type'] = get_product_type(product_description)
@@ -632,6 +634,8 @@ def generate_shopify_feed(excel_file, output_file=None, test_mode=False):
                     # Only set certain fields for the first row of the product
                     if is_first_row:
                         new_row['Title'] = product_description
+                        # Set Image Alt Text to match the Title
+                        new_row['Image Alt Text'] = product_description
                         new_row['Vendor'] = "vendor-unknown"
                         new_row['Product Category'] = "Uncategorized"
                         new_row['Type'] = product_type

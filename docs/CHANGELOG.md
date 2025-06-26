@@ -1,5 +1,11 @@
 # Changelog for shopify_feed_generator.py
 
+## Version 1.8.1 - 2025-06-24 (Image Alt Text Update)
+
+### Improvements:
+- Set "Image Alt Text" to match the "Title" for the first row of each product
+- This improves SEO and accessibility for product images
+
 ## Version 1.8.0 - 2025-06-24 (Generalization and Compatibility Updates)
 
 ### Improvements:
