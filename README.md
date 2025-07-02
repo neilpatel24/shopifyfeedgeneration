@@ -1,6 +1,6 @@
 # Shopify Product Feed Generator
 
-A Python tool that generates Shopify product feed data from an Excel file, with both file upload and manual input options. Now includes automatic tracking of products with unidentified finishes for retrospective fixing.
+A Python tool that generates Shopify product feed data from an Excel file, with both file upload and manual input options. Now includes automatic tracking of products with unidentified finishes for retrospective fixing, Tags population from Excel column K, and Option Value cleaning for Shopify compatibility.
 
 ## Directory Structure
 
@@ -78,6 +78,8 @@ The web interface provides two methods for generating Shopify feeds:
 - **Two input methods**: File upload or manual data entry
 - Generates Shopify product feed from MASTER COPY Excel file
 - **Manual product creation**: Enter product data through web forms
+- **Tags from Column K**: Automatically populates product tags from column K in MASTER COPY for better categorization and SEO
+- **Option Value Cleaning**: Removes commas from Size options and replaces with ` -` to prevent Shopify import issues
 - **Finish selection**: Choose from 25 available finishes including:
   - Factory Finished Satin Brass (FFSB)
   - Factory Finished Polished Nickel (FFPN)
@@ -143,11 +145,16 @@ This generates 16 variants (2 sizes × 8 finishes) using the same logic as the f
 
 ## Latest Version
 
-Version 1.9.0 includes:
-- **Products without sizes are now fully supported**: Previously, products without size data were excluded from processing. Now they are included in the Shopify feed with smart option handling.
-- **Flexible product structure**: Products without sizes use "Finish" as Option1, while products with sizes continue to use the existing Size/Finish structure.
-- **Increased product coverage**: No products are lost due to missing size data, improving feed completeness.
-- **Enhanced processing logic**: Intelligently detects whether products have sizes and processes accordingly.
+Version 1.10.0 includes:
+- **Tags from Column K**: Automatically populates the "Tags" field in Shopify feed from column K (11th column) in MASTER COPY for better product categorization and SEO
+- **Option1 Value Cleaning**: Removes commas from Size option values and replaces with ` -` to prevent Shopify import issues (e.g., "60mm Knob, 63mm Base, 70mm P" → "60mm Knob - 63mm Base - 70mm P")
+- **Enhanced Error Tracking**: Products without tags in column K are flagged and tracked in `products_not_processed.csv` for quality control
+- **Improved Data Validation**: Ensures all processed products have complete metadata including proper tags
+- All previous features from 1.9.0:
+  - **Products without sizes are now fully supported**: Previously, products without size data were excluded from processing. Now they are included in the Shopify feed with smart option handling.
+  - **Flexible product structure**: Products without sizes use "Finish" as Option1, while products with sizes continue to use the existing Size/Finish structure.
+  - **Increased product coverage**: No products are lost due to missing size data, improving feed completeness.
+  - **Enhanced processing logic**: Intelligently detects whether products have sizes and processes accordingly.
 - All previous features from 1.8.5:
   - **Correct SKU mapping for product finishes**: Each finish (CP, SCP, PB, ##, X##) is now correctly mapped to its specific SKU from the MASTER COPY
   - **Fixed case sensitivity issue** with X## vs x## finish codes

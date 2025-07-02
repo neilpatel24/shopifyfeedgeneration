@@ -1,5 +1,44 @@
 # Changelog for shopify_feed_generator.py
 
+## Version 1.10.0 - 2025-01-15 (Tags and Option Value Enhancements)
+
+### New Features:
+- **Tags from Column K**: Automatically populates the "Tags" field in Shopify feed from column K (11th column) in MASTER COPY
+  - Tags are extracted from the first row of each product group
+  - Only populated in the first row of each product (not every variant)
+  - Example: "The Matt Black Suite - Door & Window Hardware"
+- **Option1 Value Cleaning**: Automatic cleaning of Size option values for Shopify compatibility
+  - Removes commas from Size options and replaces with ` -` (space + hyphen)
+  - Example: "60mm Knob, 63mm Base, 70mm P" → "60mm Knob - 63mm Base - 70mm P"
+  - Prevents Shopify import issues caused by commas in option values
+
+### Enhanced Error Tracking:
+- **Missing Tags Detection**: Products without tags in column K are flagged and not processed
+- **Comprehensive Error Reporting**: Missing tags are tracked in `products_not_processed.csv` with reason "Missing tag in column K"
+- **Better Quality Control**: Ensures all processed products have proper tag metadata
+
+### Technical Improvements:
+- Added `clean_option_value()` function for Size option cleaning
+- Added `get_tags_from_column_k()` function for tag extraction from Excel column K
+- Applied changes to both test mode and normal processing modes
+- Enhanced error tracking with specific tag-related error messages
+- Improved data validation to ensure product completeness
+
+### Benefits:
+- **Shopify Compatibility**: Cleaned option values prevent import errors
+- **Better SEO**: Proper product tags improve searchability and organization
+- **Quality Assurance**: Missing tags are caught before feed generation
+- **Metadata Completeness**: All products include proper categorization tags
+
+### Example Usage:
+```bash
+# Test with specific rows that have tags
+python3 shopify_feed_generator.py --test --rows "14815-14816"
+
+# Normal processing will now include tags and clean option values
+python3 shopify_feed_generator.py --input "MASTER COPY.xlsx" --output "tagged_feed.xlsx"
+```
+
 ## Version 1.9.0 - 2025-01-15 (Products Without Sizes Support)
 
 ### New Features:
