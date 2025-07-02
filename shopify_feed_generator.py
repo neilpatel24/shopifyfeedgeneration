@@ -7,8 +7,8 @@ import warnings
 import openpyxl
 
 # Version information
-__version__ = "1.8.5"
-__date__ = "2025-06-24"
+__version__ = "1.9.0"
+__date__ = "2025-01-15"
 __description__ = "Shopify Product Feed Generator"
 
 # Suppress the FutureWarning about DataFrame concatenation
@@ -284,8 +284,8 @@ def generate_shopify_feed(excel_file, output_file=None, test_mode=False):
             # Store SKU/price data by row and track which finishes each row applies to
             row_data = {}
             for idx, row in valid_rows_df.iterrows():
-                if not pd.isna(row['size']) and not pd.isna(row['code']) and not pd.isna(row['rrp']):
-                    size = row['size']
+                if not pd.isna(row['code']) and not pd.isna(row['rrp']):
+                    size = row['size'] if not pd.isna(row.get('size')) else None
                     # Convert SKU to string and remove .0 if it's a whole number
                     sku = str(row['code'])
                     if sku.endswith('.0'):
@@ -310,15 +310,24 @@ def generate_shopify_feed(excel_file, output_file=None, test_mode=False):
                     elif finish_code == "##":
                         # This row applies to the 14 ## finishes
                         applicable_finishes = [finish_code_to_name.get(code, f"Unknown ({code})") for code in hash_codes if code in finish_code_to_name]
-                        print(f"Row {idx}: Size={size}, SKU={sku}, Price=£{price}, Finish=##, Applies to {len(applicable_finishes)} finishes")
+                        if size:
+                            print(f"Row {idx}: Size={size}, SKU={sku}, Price=£{price}, Finish=##, Applies to {len(applicable_finishes)} finishes")
+                        else:
+                            print(f"Row {idx}: No size, SKU={sku}, Price=£{price}, Finish=##, Applies to {len(applicable_finishes)} finishes")
                     elif finish_code == "x##":
                         # This row applies to the 8 x## finishes
                         applicable_finishes = [finish_code_to_name.get(code, f"Unknown ({code})") for code in xhash_codes if code in finish_code_to_name]
-                        print(f"Row {idx}: Size={size}, SKU={sku}, Price=£{price}, Finish=x##, Applies to {len(applicable_finishes)} finishes")
+                        if size:
+                            print(f"Row {idx}: Size={size}, SKU={sku}, Price=£{price}, Finish=x##, Applies to {len(applicable_finishes)} finishes")
+                        else:
+                            print(f"Row {idx}: No size, SKU={sku}, Price=£{price}, Finish=x##, Applies to {len(applicable_finishes)} finishes")
                     elif finish_code in finish_code_to_name:
                         # This row applies to a specific finish
                         applicable_finishes = [finish_code_to_name[finish_code]]
-                        print(f"Row {idx}: Size={size}, SKU={sku}, Price=£{price}, Finish={finish_code}, Applies to {finish_code_to_name[finish_code]}")
+                        if size:
+                            print(f"Row {idx}: Size={size}, SKU={sku}, Price=£{price}, Finish={finish_code}, Applies to {finish_code_to_name[finish_code]}")
+                        else:
+                            print(f"Row {idx}: No size, SKU={sku}, Price=£{price}, Finish={finish_code}, Applies to {finish_code_to_name[finish_code]}")
                     else:
                         # If we can't determine the finishes, use all finishes from column 25
                         print(f"Warning: Row {idx} has unknown finish code {finish_code}. Using all finishes.")
@@ -328,7 +337,7 @@ def generate_shopify_feed(excel_file, output_file=None, test_mode=False):
                         finishes_not_found.append({
                             "Product Description": product_description,
                             "Row Index": idx,
-                            "Size": size,
+                            "Size": size if size else "No size",
                             "SKU": sku,
                             "Finish Code": finish_code,
                             "Reason": f"Unknown finish code: {finish_code}",
@@ -340,15 +349,16 @@ def generate_shopify_feed(excel_file, output_file=None, test_mode=False):
                         "price": price,
                         "sku": sku,
                         "finish_code": finish_code,
-                        "applicable_finishes": applicable_finishes
+                        "applicable_finishes": applicable_finishes,
+                        "has_size": size is not None
                     }
             
             if not row_data:
-                print(f"Error: No valid size/SKU/price data found in rows for product: {product_description}")
+                print(f"Error: No valid SKU/price data found in rows for product: {product_description}")
                 # Track this product as not processed
                 products_not_processed.append({
                     "Product Description": product_description,
-                    "Reason": "Missing size/SKU/price data",
+                    "Reason": "Missing SKU/price data",
                     "Row Range": f"Rows {product_group_rows[0].name}-{product_group_rows[-1].name}" if len(product_group_rows) > 0 else "Unknown"
                 })
                 continue
@@ -362,9 +372,16 @@ def generate_shopify_feed(excel_file, output_file=None, test_mode=False):
             unique_finishes = list(set(all_applicable_finishes))
             print(f"Total unique finishes: {len(unique_finishes)}")
             
+            # Determine if this product has sizes or not  
+            product_has_sizes = len(unique_sizes) > 0
+            
             # Calculate expected number of variants
-            expected_variants = len(unique_sizes) * len(unique_finishes)
-            print(f"Expected number of variants: {len(unique_sizes)} sizes × {len(unique_finishes)} finishes = {expected_variants}")
+            if product_has_sizes:
+                expected_variants = len(unique_sizes) * len(unique_finishes)
+                print(f"Expected number of variants: {len(unique_sizes)} sizes × {len(unique_finishes)} finishes = {expected_variants}")
+            else:
+                expected_variants = len(unique_finishes)
+                print(f"Expected number of variants (no sizes): {len(unique_finishes)} finishes = {expected_variants}")
             
             # Create rows for each size-finish combination, but only where the SKU applies to that finish
             product_rows = []
@@ -372,16 +389,132 @@ def generate_shopify_feed(excel_file, output_file=None, test_mode=False):
             # Track if we've already set the first-row-only fields
             first_row_set = False
             
-            # Process each size
-            for size in unique_sizes:
-                # For each finish, create a row in the Shopify feed
+            if product_has_sizes:
+                # Process each size
+                for size in unique_sizes:
+                    # For each finish, create a row in the Shopify feed
+                    for finish in unique_finishes:
+                        # Find which row's SKU applies to this specific finish
+                        matching_row = None
+                        
+                        # First try to find an exact match for this specific finish
+                        for idx, data in row_data.items():
+                            if data["size"] == size:
+                                # Check if this is a specific finish code (not ## or x##)
+                                if data["finish_code"] in finish_code_to_name and finish == finish_code_to_name[data["finish_code"]]:
+                                    matching_row = (idx, data)
+                                    break
+                        
+                        # If no exact match found, check for ## and x## categories
+                        if matching_row is None:
+                            # Check if this finish is in the hash_codes (##) list
+                            finish_code = None
+                            for code in hash_codes:
+                                if code in finish_code_to_name and finish == finish_code_to_name[code]:
+                                    finish_code = "##"
+                                    break
+                            
+                            # If not in hash_codes, check if it's in xhash_codes (x##)
+                            if finish_code is None:
+                                for code in xhash_codes:
+                                    if code in finish_code_to_name and finish == finish_code_to_name[code]:
+                                        finish_code = "X##"
+                                        break
+                            
+                            # Now find the row with this finish_code
+                            if finish_code:
+                                for idx, data in row_data.items():
+                                    if data["size"] == size and data["finish_code"] == finish_code:
+                                        matching_row = (idx, data)
+                                        break
+                        
+                        # If still no match, fall back to the original method as a last resort
+                        if matching_row is None:
+                            for idx, data in row_data.items():
+                                if data["size"] == size and finish in data["applicable_finishes"]:
+                                    matching_row = (idx, data)
+                                    break
+                        
+                        # If no row applies to this finish, skip it
+                        if matching_row is None:
+                            continue
+                        
+                        idx, data = matching_row
+                        sku_base = data["sku"]
+                        price = data["price"]
+                        
+                        # Create new row based on template
+                        new_row = {col: None for col in template_columns}
+                        
+                        # Set values based on mapping instructions
+                        new_row['Handle'] = clean_string(product_description)
+                        
+                        # Only set certain fields for the first row of the product
+                        is_first_row = not first_row_set
+                        
+                        if is_first_row:
+                            new_row['Title'] = product_description
+                            # Set Image Alt Text to match the Title
+                            new_row['Image Alt Text'] = product_description
+                            new_row['Vendor'] = "vendor-unknown"
+                            new_row['Product Category'] = "Uncategorized"
+                            new_row['Type'] = get_product_type(product_description)
+                            # Use string "TRUE" instead of boolean True
+                            new_row['Published'] = "TRUE"
+                            new_row['Option1 Name'] = "Size"
+                            new_row['Option2 Name'] = "Finish"
+                            
+                            # Use an example image from sample
+                            if not sample_df.empty and 'Image Src' in sample_df.columns and not pd.isna(sample_df['Image Src'].iloc[0]):
+                                new_row['Image Src'] = sample_df['Image Src'].iloc[0]
+                                
+                            new_row['Image Position'] = 1
+                            new_row['Gift Card'] = "FALSE"
+                            new_row['SEO Title'] = f"{product_description} | A&H Brass"
+                            
+                            # Set regional inclusion - use "TRUE" string instead of boolean True
+                            for region in ['United Kingdom', 'Australia', 'Canada', 'Europe', 'International', 'United States']:
+                                new_row[f'Included / {region}'] = "TRUE"
+                            
+                            new_row['Status'] = "draft"
+                            
+                            # Mark that we've set the first row fields
+                            first_row_set = True
+                        
+                        # Set variant-specific values
+                        new_row['Option1 Value'] = size
+                        new_row['Option2 Value'] = finish
+                        
+                        # Set SKU - the original SKU from the row that applies to this finish
+                        new_row['Variant SKU'] = sku_base
+                        new_row['Variant Grams'] = 0
+                        new_row['Variant Inventory Tracker'] = "shopify"
+                        new_row['Variant Inventory Qty'] = 10000
+                        new_row['Variant Inventory Policy'] = "deny"
+                        new_row['Variant Fulfillment Service'] = "manual"
+                        new_row['Variant Price'] = price
+                        
+                        # Set these as string literals
+                        new_row['Variant Requires Shipping'] = "TRUE"
+                        new_row['Variant Taxable'] = "TRUE"
+                        
+                        # Use the same image for all variants
+                        if not sample_df.empty and 'Image Src' in sample_df.columns and not pd.isna(sample_df['Image Src'].iloc[0]):
+                            new_row['Variant Image'] = sample_df['Image Src'].iloc[0]
+                            
+                        new_row['Variant Weight Unit'] = "kg"
+                        
+                        # Add the row to our product rows
+                        product_rows.append(new_row)
+            else:
+                # Process products without sizes - finishes become Option1
                 for finish in unique_finishes:
                     # Find which row's SKU applies to this specific finish
                     matching_row = None
                     
                     # First try to find an exact match for this specific finish
                     for idx, data in row_data.items():
-                        if data["size"] == size:
+                        if not data["has_size"]:  # Only consider rows without sizes
                             # Check if this is a specific finish code (not ## or x##)
                             if data["finish_code"] in finish_code_to_name and finish == finish_code_to_name[data["finish_code"]]:
                                 matching_row = (idx, data)
@@ -406,14 +539,14 @@ def generate_shopify_feed(excel_file, output_file=None, test_mode=False):
                         # Now find the row with this finish_code
                         if finish_code:
                             for idx, data in row_data.items():
-                                if data["size"] == size and data["finish_code"] == finish_code:
+                                if not data["has_size"] and data["finish_code"] == finish_code:
                                     matching_row = (idx, data)
                                     break
                     
                     # If still no match, fall back to the original method as a last resort
                     if matching_row is None:
                         for idx, data in row_data.items():
-                            if data["size"] == size and finish in data["applicable_finishes"]:
+                            if not data["has_size"] and finish in data["applicable_finishes"]:
                                 matching_row = (idx, data)
                                 break
                     
@@ -443,8 +576,10 @@ def generate_shopify_feed(excel_file, output_file=None, test_mode=False):
                         new_row['Type'] = get_product_type(product_description)
                         # Use string "TRUE" instead of boolean True
                         new_row['Published'] = "TRUE"
-                        new_row['Option1 Name'] = "Size"
-                        new_row['Option2 Name'] = "Finish"
+                        
+                        # For products without sizes - set Option1 to Finish, leave Option2 empty
+                        new_row['Option1 Name'] = "Finish"
+                        # Option2 Name is left as None/empty
                         
                         # Use an example image from sample
                         if not sample_df.empty and 'Image Src' in sample_df.columns and not pd.isna(sample_df['Image Src'].iloc[0]):
@@ -463,9 +598,9 @@ def generate_shopify_feed(excel_file, output_file=None, test_mode=False):
                         # Mark that we've set the first row fields
                         first_row_set = True
                     
-                    # Set variant-specific values
-                    new_row['Option1 Value'] = size
-                    new_row['Option2 Value'] = finish
+                    # Set variant-specific values for products without sizes
+                    new_row['Option1 Value'] = finish  # Finish goes to Option1
+                    # Option2 Value is left as None/empty
                     
                     # Set SKU - the original SKU from the row that applies to this finish
                     new_row['Variant SKU'] = sku_base
@@ -529,10 +664,21 @@ def generate_shopify_feed(excel_file, output_file=None, test_mode=False):
             # Determine product type
             product_type = get_product_type(product_description)
             
-            # Get unique sizes for this product
-            valid_rows = [row for row in product_group if not pd.isna(row.get('size'))]
-            unique_sizes = list(set([row['size'] for row in valid_rows if not pd.isna(row['size'])]))
-            print(f"  Found {len(unique_sizes)} unique sizes")
+            # Get unique sizes for this product, but keep all rows for processing
+            all_rows = product_group
+            valid_rows = [row for row in product_group if not pd.isna(row.get('code')) and not pd.isna(row.get('rrp'))]
+            
+            # Check if this product has any sizes
+            rows_with_sizes = [row for row in valid_rows if not pd.isna(row.get('size'))]
+            rows_without_sizes = [row for row in valid_rows if pd.isna(row.get('size'))]
+            
+            has_sizes = len(rows_with_sizes) > 0
+            unique_sizes = list(set([row['size'] for row in rows_with_sizes if not pd.isna(row['size'])])) if has_sizes else []
+            
+            print(f"  Found {len(unique_sizes)} unique sizes, {len(rows_without_sizes)} rows without sizes")
+            
+            # Use all valid rows (both with and without sizes) for processing
+            valid_rows = rows_with_sizes + rows_without_sizes
             
             # Check if product name contains keywords for finish selection
             keywords = ['Bjorn', 'Cadiz', 'Denham', 'Wilton', 'Capri', 'Leon', 'Oxon']
@@ -570,10 +716,10 @@ def generate_shopify_feed(excel_file, output_file=None, test_mode=False):
             # Store data by row and track which finishes each row applies to
             row_data = {}
             for i, row in enumerate(valid_rows):
-                if pd.isna(row.get('size')) or pd.isna(row.get('code')) or pd.isna(row.get('rrp')):
+                if pd.isna(row.get('code')) or pd.isna(row.get('rrp')):
                     continue
                     
-                size = row['size']
+                size = row['size'] if not pd.isna(row.get('size')) else None
                 # Convert SKU to string and remove .0 if it's a whole number
                 sku = str(row['code'])
                 if sku.endswith('.0'):
@@ -629,11 +775,18 @@ def generate_shopify_feed(excel_file, output_file=None, test_mode=False):
                     "sku": sku,
                     "finish_code": finish_code,
                     "applicable_finishes": applicable_finishes,
-                    "row": row  # Keep original row data for reference
+                    "row": row,  # Keep original row data for reference
+                    "has_size": size is not None
                 }
             
             if not row_data:
-                print(f"  No valid data found for product {product_description}, skipping")
+                print(f"Error: No valid SKU/price data found in rows for product: {product_description}")
+                # Track this product as not processed
+                products_not_processed.append({
+                    "Product Description": product_description,
+                    "Reason": "Missing SKU/price data",
+                    "Row Range": f"Rows {product_group_rows[0].name}-{product_group_rows[-1].name}" if len(product_group_rows) > 0 else "Unknown"
+                })
                 continue
             
             # Get all unique finishes that will be used
@@ -642,23 +795,149 @@ def generate_shopify_feed(excel_file, output_file=None, test_mode=False):
                 all_applicable_finishes.extend(data["applicable_finishes"])
             unique_finishes = list(set(all_applicable_finishes))
             
+            # Determine if this product has sizes or not
+            product_has_sizes = len(unique_sizes) > 0
+            
             # Calculate expected number of variants
-            expected_variants = len(unique_sizes) * len(unique_finishes)
-            print(f"  Expected variants: {len(unique_sizes)} sizes × {len(unique_finishes)} finishes = {expected_variants}")
+            if product_has_sizes:
+                expected_variants = len(unique_sizes) * len(unique_finishes)
+                print(f"  Expected variants: {len(unique_sizes)} sizes × {len(unique_finishes)} finishes = {expected_variants}")
+            else:
+                expected_variants = len(unique_finishes)
+                print(f"  Expected variants (no sizes): {len(unique_finishes)} finishes = {expected_variants}")
             
             # Create Shopify rows for each size-finish combination, but only where the SKU applies
             is_first_row = True
             
-            # Process each size
-            for size in unique_sizes:
-                # For each finish, create a row in the Shopify feed
+            if product_has_sizes:
+                # Process each size
+                for size in unique_sizes:
+                    # For each finish, create a row in the Shopify feed
+                    for finish in unique_finishes:
+                        # Find which row's SKU applies to this specific finish
+                        matching_row = None
+                        
+                        # First try to find an exact match for this specific finish
+                        for idx, data in row_data.items():
+                            if data["size"] == size:
+                                # Check if this is a specific finish code (not ## or x##)
+                                if data["finish_code"] in finish_code_to_name and finish == finish_code_to_name[data["finish_code"]]:
+                                    matching_row = (idx, data)
+                                    break
+                        
+                        # If no exact match found, check for ## and x## categories
+                        if matching_row is None:
+                            # Check if this finish is in the hash_codes (##) list
+                            finish_code = None
+                            for code in hash_codes:
+                                if code in finish_code_to_name and finish == finish_code_to_name[code]:
+                                    finish_code = "##"
+                                    break
+                            
+                            # If not in hash_codes, check if it's in xhash_codes (x##)
+                            if finish_code is None:
+                                for code in xhash_codes:
+                                    if code in finish_code_to_name and finish == finish_code_to_name[code]:
+                                        finish_code = "X##"
+                                        break
+                            
+                            # Now find the row with this finish_code
+                            if finish_code:
+                                for idx, data in row_data.items():
+                                    if data["size"] == size and data["finish_code"] == finish_code:
+                                        matching_row = (idx, data)
+                                        break
+                        
+                        # If still no match, fall back to the original method as a last resort
+                        if matching_row is None:
+                            for idx, data in row_data.items():
+                                if data["size"] == size and finish in data["applicable_finishes"]:
+                                    matching_row = (idx, data)
+                                    break
+                        
+                        # If no row applies to this finish, skip it
+                        if matching_row is None:
+                            continue
+                        
+                        idx, data = matching_row
+                        sku_base = data["sku"]
+                        price = data["price"]
+                        
+                        # Create new row based on template
+                        new_row = {col: None for col in template_columns}
+                        
+                        # Set values based on mapping instructions
+                        new_row['Handle'] = handle
+                        
+                        # Only set certain fields for the first row of the product
+                        if is_first_row:
+                            new_row['Title'] = product_description
+                            # Set Image Alt Text to match the Title
+                            new_row['Image Alt Text'] = product_description
+                            new_row['Vendor'] = "vendor-unknown"
+                            new_row['Product Category'] = "Uncategorized"
+                            new_row['Type'] = product_type
+                            # Use string "TRUE" instead of boolean True
+                            new_row['Published'] = "TRUE"
+                            
+                            # For products with sizes - set Option1 to Size, Option2 to Finish
+                            # Check if this is a lever handle on plate for Option1 Name
+                            if any(tag in product_description.lower() for tag in ["lever handles on plate", "lever handle on plate"]):
+                                new_row['Option1 Name'] = "Option"
+                            else:
+                                new_row['Option1 Name'] = "Size"
+                                
+                            new_row['Option2 Name'] = "Finish"
+                            
+                            # Use an example image from sample
+                            if not sample_df.empty and 'Image Src' in sample_df.columns and not pd.isna(sample_df['Image Src'].iloc[0]):
+                                new_row['Image Src'] = sample_df['Image Src'].iloc[0]
+                                
+                            new_row['Image Position'] = 1
+                            new_row['Gift Card'] = "FALSE"
+                            new_row['SEO Title'] = f"{product_description} | A&H Brass"
+                            
+                            # Set regional inclusion - use "TRUE" string instead of boolean True
+                            for region in ['United Kingdom', 'Australia', 'Canada', 'Europe', 'International', 'United States']:
+                                new_row[f'Included / {region}'] = "TRUE"
+                            
+                            new_row['Status'] = "draft"
+                            
+                            # Mark that we've set the first row fields
+                            is_first_row = False
+                        
+                        # Set variant-specific values for products with sizes
+                        new_row['Option1 Value'] = size
+                        new_row['Option2 Value'] = finish
+                        new_row['Variant SKU'] = sku_base
+                        new_row['Variant Grams'] = 0
+                        new_row['Variant Inventory Tracker'] = "shopify"
+                        new_row['Variant Inventory Qty'] = 10000
+                        new_row['Variant Inventory Policy'] = "deny"
+                        new_row['Variant Fulfillment Service'] = "manual"
+                        new_row['Variant Price'] = price
+                        
+                        # Set these as string literals
+                        new_row['Variant Requires Shipping'] = "TRUE"
+                        new_row['Variant Taxable'] = "TRUE"
+                        
+                        # Use the same image for all variants
+                        if not sample_df.empty and 'Image Src' in sample_df.columns and not pd.isna(sample_df['Image Src'].iloc[0]):
+                            new_row['Variant Image'] = sample_df['Image Src'].iloc[0]
+                            
+                        new_row['Variant Weight Unit'] = "kg"
+                        
+                        # Add the row to our product rows
+                        product_rows.append(new_row)
+            else:
+                # Process products without sizes - finishes become Option1
                 for finish in unique_finishes:
                     # Find which row's SKU applies to this specific finish
                     matching_row = None
                     
                     # First try to find an exact match for this specific finish
                     for idx, data in row_data.items():
-                        if data["size"] == size:
+                        if not data["has_size"]:  # Only consider rows without sizes
                             # Check if this is a specific finish code (not ## or x##)
                             if data["finish_code"] in finish_code_to_name and finish == finish_code_to_name[data["finish_code"]]:
                                 matching_row = (idx, data)
@@ -683,14 +962,14 @@ def generate_shopify_feed(excel_file, output_file=None, test_mode=False):
                         # Now find the row with this finish_code
                         if finish_code:
                             for idx, data in row_data.items():
-                                if data["size"] == size and data["finish_code"] == finish_code:
+                                if not data["has_size"] and data["finish_code"] == finish_code:
                                     matching_row = (idx, data)
                                     break
                     
                     # If still no match, fall back to the original method as a last resort
                     if matching_row is None:
                         for idx, data in row_data.items():
-                            if data["size"] == size and finish in data["applicable_finishes"]:
+                            if not data["has_size"] and finish in data["applicable_finishes"]:
                                 matching_row = (idx, data)
                                 break
                     
@@ -719,13 +998,9 @@ def generate_shopify_feed(excel_file, output_file=None, test_mode=False):
                         # Use string "TRUE" instead of boolean True
                         new_row['Published'] = "TRUE"
                         
-                        # Check if this is a lever handle on plate for Option1 Name
-                        if any(tag in product_description.lower() for tag in ["lever handles on plate", "lever handle on plate"]):
-                            new_row['Option1 Name'] = "Option"
-                        else:
-                            new_row['Option1 Name'] = "Size"
-                            
-                        new_row['Option2 Name'] = "Finish"
+                        # For products without sizes - set Option1 to Finish, leave Option2 empty
+                        new_row['Option1 Name'] = "Finish"
+                        # Option2 Name is left as None/empty
                         
                         # Use an example image from sample
                         if not sample_df.empty and 'Image Src' in sample_df.columns and not pd.isna(sample_df['Image Src'].iloc[0]):
@@ -744,9 +1019,9 @@ def generate_shopify_feed(excel_file, output_file=None, test_mode=False):
                         # Mark that we've set the first row fields
                         is_first_row = False
                     
-                    # Set variant-specific values
-                    new_row['Option1 Value'] = size
-                    new_row['Option2 Value'] = finish
+                    # Set variant-specific values for products without sizes
+                    new_row['Option1 Value'] = finish  # Finish goes to Option1
+                    # Option2 Value is left as None/empty
                     new_row['Variant SKU'] = sku_base
                     new_row['Variant Grams'] = 0
                     new_row['Variant Inventory Tracker'] = "shopify"

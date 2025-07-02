@@ -1,5 +1,34 @@
 # Changelog for shopify_feed_generator.py
 
+## Version 1.9.0 - 2025-01-15 (Products Without Sizes Support)
+
+### New Features:
+- **Products without sizes are now fully supported**: Previously, products without size data were excluded from processing. Now they are included in the Shopify feed.
+- **Smart option handling**: Products without sizes use "Finish" as Option1 (instead of Size), with Option2 left empty.
+- **Dual processing paths**: The system now intelligently detects whether a product has sizes and processes accordingly:
+  - **Products with sizes**: Option1 = "Size", Option2 = "Finish" (existing behavior)
+  - **Products without sizes**: Option1 = "Finish", Option2 = empty (new behavior)
+
+### Technical Improvements:
+- Modified product filtering logic to include products without size data
+- Added `has_size` flag to track whether each row contains size information
+- Updated variant creation logic for both test mode and normal mode
+- Enhanced logging to clearly indicate when products without sizes are being processed
+- Updated error messages to reflect that sizes are no longer required
+
+### Benefits:
+- **Increased product coverage**: No products are lost due to missing size data
+- **Flexible product structure**: Accommodates different product types (with/without sizes)
+- **Backward compatibility**: Products with sizes continue to work exactly as before
+- **Better error tracking**: Clear distinction between products without sizes (now valid) vs. products missing essential data (SKU/price)
+
+### Example:
+For a product without sizes but with finish code "##":
+- Creates 14 variants (one for each finish)
+- Option1 Name = "Finish"
+- Option1 Value = finish names (e.g., "Polished Nickel (PN)", "Satin Brass (SB)", etc.)
+- Option2 Name and Option2 Value remain empty
+
 ## Version 1.8.5 - 2025-06-24 (Streamlit Display Fix)
 
 ### Fixes:

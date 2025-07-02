@@ -143,15 +143,20 @@ This generates 16 variants (2 sizes × 8 finishes) using the same logic as the f
 
 ## Latest Version
 
-Version 1.8.5 includes:
-- **Correct SKU mapping for product finishes**: Each finish (CP, SCP, PB, ##, X##) is now correctly mapped to its specific SKU from the MASTER COPY
-- **Fixed case sensitivity issue** with X## vs x## finish codes
-- **Error tracking and reporting** for products that couldn't be processed due to missing data
-- **Products with missing data** are now logged to products_not_processed.csv
-- **Improved Streamlit UI** with proper display of error reports and downloadable CSV
-- **Image Alt Text optimization** for better SEO and accessibility
-- **Generalization improvements** with removal of company-specific references
-- All previous features from 1.7.1:
+Version 1.9.0 includes:
+- **Products without sizes are now fully supported**: Previously, products without size data were excluded from processing. Now they are included in the Shopify feed with smart option handling.
+- **Flexible product structure**: Products without sizes use "Finish" as Option1, while products with sizes continue to use the existing Size/Finish structure.
+- **Increased product coverage**: No products are lost due to missing size data, improving feed completeness.
+- **Enhanced processing logic**: Intelligently detects whether products have sizes and processes accordingly.
+- All previous features from 1.8.5:
+  - **Correct SKU mapping for product finishes**: Each finish (CP, SCP, PB, ##, X##) is now correctly mapped to its specific SKU from the MASTER COPY
+  - **Fixed case sensitivity issue** with X## vs x## finish codes
+  - **Error tracking and reporting** for products that couldn't be processed due to missing data
+  - **Products with missing data** are now logged to products_not_processed.csv
+  - **Improved Streamlit UI** with proper display of error reports and downloadable CSV
+  - **Image Alt Text optimization** for better SEO and accessibility
+  - **Generalization improvements** with removal of company-specific references
+- All features from 1.7.1:
   - Finishes tracking and reporting for unidentified finishes
   - Enhanced column F logic for better finish selection
   - CSV export functionality for retrospective fixing
