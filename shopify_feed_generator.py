@@ -637,6 +637,9 @@ def generate_shopify_feed(excel_file, output_file=None, test_mode=False):
                         new_row['Gift Card'] = "FALSE"
                         new_row['SEO Title'] = f"{product_description} | A&H Brass"
                         
+                        # Set Tags from column K
+                        new_row['Tags'] = tags
+                        
                         # Set regional inclusion - use "TRUE" string instead of boolean True
                         for region in ['United Kingdom', 'Australia', 'Canada', 'Europe', 'International', 'United States']:
                             new_row[f'Included / {region}'] = "TRUE"
