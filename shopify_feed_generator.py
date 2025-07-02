@@ -7,7 +7,7 @@ import warnings
 import openpyxl
 
 # Version information
-__version__ = "1.9.0"
+__version__ = "1.10.0"
 __date__ = "2025-01-15"
 __description__ = "Shopify Product Feed Generator"
 
@@ -25,6 +25,34 @@ def clean_string(s):
     if pd.isna(s):
         return ""
     return re.sub(r'[^a-zA-Z0-9\-]', '', str(s).lower().replace(' ', '-'))
+
+def clean_option_value(value, option_name):
+    """Clean option values - specifically remove commas from Size options"""
+    if pd.isna(value):
+        return value
+    
+    # If this is a Size option, replace commas with ' -'
+    if option_name == "Size":
+        return str(value).replace(',', ' -')
+    
+    return value
+
+def get_tags_from_column_k(product_group):
+    """Get tags from column K (11th column, index 10) of the first row in product group"""
+    try:
+        # Get the first row of the product group
+        first_row = product_group[0]
+        
+        # Handle pandas Series (both test and normal mode use Series)
+        if hasattr(first_row, 'iloc'):  # This is a pandas Series
+            if len(first_row) > 10:  # Make sure column K exists
+                column_k_value = first_row.iloc[10]
+                if not pd.isna(column_k_value) and str(column_k_value).strip():
+                    return str(column_k_value).strip()
+        
+        return None
+    except (IndexError, AttributeError, KeyError):
+        return None
 
 def find_new_products(master_copy_df, existing_feed_df=None):
     """Find new products in the MASTER COPY tab that need to be added to the feed"""
@@ -240,6 +268,23 @@ def generate_shopify_feed(excel_file, output_file=None, test_mode=False):
                 
             print(f"\nProcessing product {product_num+1}: {product_description}")
             
+            # Get tags from column K for this product group
+            tags = get_tags_from_column_k(product_group_rows)
+            if not tags:
+                print(f"Warning: No tags found in column K for product: {product_description}")
+                # Track this product as not processed due to missing tags
+                products_not_processed.append({
+                    "Product Description": product_description,
+                    "Reason": "Missing tag in column K",
+                    "Row Range": f"Rows {product_group_rows[0].name}-{product_group_rows[-1].name}" if len(product_group_rows) > 0 else "Unknown"
+                })
+                continue
+            else:
+                print(f"Found tags for product: {tags}")
+            
+            # Generate handle from product description
+            handle = clean_string(product_description)
+            
             # Convert the list of rows back to a DataFrame
             valid_rows_df = pd.DataFrame(product_group_rows)
             
@@ -447,7 +492,7 @@ def generate_shopify_feed(excel_file, output_file=None, test_mode=False):
                         new_row = {col: None for col in template_columns}
                         
                         # Set values based on mapping instructions
-                        new_row['Handle'] = clean_string(product_description)
+                        new_row['Handle'] = handle
                         
                         # Only set certain fields for the first row of the product
                         is_first_row = not first_row_set
@@ -472,6 +517,9 @@ def generate_shopify_feed(excel_file, output_file=None, test_mode=False):
                             new_row['Gift Card'] = "FALSE"
                             new_row['SEO Title'] = f"{product_description} | A&H Brass"
                             
+                            # Set Tags from column K
+                            new_row['Tags'] = tags
+                            
                             # Set regional inclusion - use "TRUE" string instead of boolean True
                             for region in ['United Kingdom', 'Australia', 'Canada', 'Europe', 'International', 'United States']:
                                 new_row[f'Included / {region}'] = "TRUE"
@@ -482,7 +530,7 @@ def generate_shopify_feed(excel_file, output_file=None, test_mode=False):
                             first_row_set = True
                         
                         # Set variant-specific values
-                        new_row['Option1 Value'] = size
+                        new_row['Option1 Value'] = clean_option_value(size, "Size")
                         new_row['Option2 Value'] = finish
                         
                         # Set SKU - the original SKU from the row that applies to this finish
@@ -562,7 +610,7 @@ def generate_shopify_feed(excel_file, output_file=None, test_mode=False):
                     new_row = {col: None for col in template_columns}
                     
                     # Set values based on mapping instructions
-                    new_row['Handle'] = clean_string(product_description)
+                    new_row['Handle'] = handle
                     
                     # Only set certain fields for the first row of the product
                     is_first_row = not first_row_set
@@ -599,7 +647,7 @@ def generate_shopify_feed(excel_file, output_file=None, test_mode=False):
                         first_row_set = True
                     
                     # Set variant-specific values for products without sizes
-                    new_row['Option1 Value'] = finish  # Finish goes to Option1
+                    new_row['Option1 Value'] = clean_option_value(finish, "Finish")  # Finish goes to Option1
                     # Option2 Value is left as None/empty
                     
                     # Set SKU - the original SKU from the row that applies to this finish
@@ -657,6 +705,20 @@ def generate_shopify_feed(excel_file, output_file=None, test_mode=False):
                 continue
             
             print(f"Processing product: {product_description}")
+            
+            # Get tags from column K for this product group
+            tags = get_tags_from_column_k(product_group)
+            if not tags:
+                print(f"Warning: No tags found in column K for product: {product_description}")
+                # Track this product as not processed due to missing tags
+                products_not_processed.append({
+                    "Product Description": product_description,
+                    "Reason": "Missing tag in column K",
+                    "Row Range": f"Product group with {len(product_group)} rows"
+                })
+                continue
+            else:
+                print(f"Found tags for product: {tags}")
             
             # Generate handle from product description
             handle = clean_string(product_description)
@@ -897,6 +959,9 @@ def generate_shopify_feed(excel_file, output_file=None, test_mode=False):
                             new_row['Gift Card'] = "FALSE"
                             new_row['SEO Title'] = f"{product_description} | A&H Brass"
                             
+                            # Set Tags from column K
+                            new_row['Tags'] = tags
+                            
                             # Set regional inclusion - use "TRUE" string instead of boolean True
                             for region in ['United Kingdom', 'Australia', 'Canada', 'Europe', 'International', 'United States']:
                                 new_row[f'Included / {region}'] = "TRUE"
@@ -907,7 +972,7 @@ def generate_shopify_feed(excel_file, output_file=None, test_mode=False):
                             is_first_row = False
                         
                         # Set variant-specific values for products with sizes
-                        new_row['Option1 Value'] = size
+                        new_row['Option1 Value'] = clean_option_value(size, "Size")
                         new_row['Option2 Value'] = finish
                         new_row['Variant SKU'] = sku_base
                         new_row['Variant Grams'] = 0
@@ -1010,6 +1075,9 @@ def generate_shopify_feed(excel_file, output_file=None, test_mode=False):
                         new_row['Gift Card'] = "FALSE"
                         new_row['SEO Title'] = f"{product_description} | A&H Brass"
                         
+                        # Set Tags from column K
+                        new_row['Tags'] = tags
+                        
                         # Set regional inclusion - use "TRUE" string instead of boolean True
                         for region in ['United Kingdom', 'Australia', 'Canada', 'Europe', 'International', 'United States']:
                             new_row[f'Included / {region}'] = "TRUE"
@@ -1020,7 +1088,7 @@ def generate_shopify_feed(excel_file, output_file=None, test_mode=False):
                         is_first_row = False
                     
                     # Set variant-specific values for products without sizes
-                    new_row['Option1 Value'] = finish  # Finish goes to Option1
+                    new_row['Option1 Value'] = clean_option_value(finish, "Finish")  # Finish goes to Option1
                     # Option2 Value is left as None/empty
                     new_row['Variant SKU'] = sku_base
                     new_row['Variant Grams'] = 0
